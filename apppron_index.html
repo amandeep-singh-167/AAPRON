@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AAPRON Smart Bottle</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cyan:#00e5ff;--cyan2:#00bcd4;--cyan3:#0097a7;
+  --navy:#0a0e1a;--navy2:#0f1525;--navy3:#161d35;--navy4:#1e2845;
+  --glass:rgba(255,255,255,0.04);--glass2:rgba(255,255,255,0.08);--glass3:rgba(0,229,255,0.08);
+  --border:rgba(255,255,255,0.08);--border2:rgba(0,229,255,0.2);
+  --text1:#f0f4ff;--text2:#8892aa;--text3:#4a5568;
+  --success:#00e676;--warn:#ffd740;--danger:#ff5252;--r:16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--navy);color:var(--text1);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(0,180,220,0.12) 0%,transparent 70%);pointer-events:none;z-index:0;}
+
+.header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:18px 32px;border-bottom:1px solid var(--border);backdrop-filter:blur(10px);background:rgba(10,14,26,0.8);}
+.header-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:4px;background:linear-gradient(135deg,#fff 30%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.header-info{display:flex;align-items:center;gap:12px;}
+.pill{display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--glass);border:1px solid var(--border);border-radius:30px;font-size:13px;color:var(--text2);}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 6px var(--success);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.pill-temp{padding:7px 14px;background:var(--glass3);border:1px solid var(--border2);border-radius:30px;font-size:13px;color:var(--cyan);font-weight:600;}
+
+/* ======== NEW: battery pill ======== */
+.pill-battery{
+  padding:7px 14px;
+  background:var(--glass);
+  border:1px solid var(--border2);
+  border-radius:30px;
+  font-size:13px;
+  font-weight:600;
+  color:var(--success);
+  display:flex;
+  align-items:center;
+  gap:6px;
+  transition:color .4s, border-color .4s, background .4s;
+  white-space:nowrap;
+}
+.pill-battery .bat-icon{
+  display:inline-flex;
+  align-items:center;
+  gap:1px;
+}
+.bat-body{
+  width:20px;height:10px;
+  border:1.5px solid currentColor;
+  border-radius:2px;
+  position:relative;
+  overflow:visible;
+}
+.bat-fill{
+  position:absolute;
+  left:1px;top:1px;bottom:1px;
+  background:currentColor;
+  border-radius:1px;
+  transition:width .6s ease;
+}
+.bat-nub{
+  display:inline-block;
+  width:3px;height:5px;
+  background:currentColor;
+  border-radius:0 1px 1px 0;
+  margin-left:1px;
+  flex-shrink:0;
+}
+/* ======== END NEW ======== */
+
+.tab-bar{position:relative;z-index:10;display:flex;gap:4px;padding:12px 32px 0;background:rgba(10,14,26,0.6);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);}
+.tab-btn{background:none;border:none;padding:10px 22px 12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text3);cursor:pointer;position:relative;transition:color .2s;border-radius:8px 8px 0 0;}
+.tab-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--cyan);transform:scaleX(0);transition:transform .25s;border-radius:2px 2px 0 0;}
+.tab-btn:hover{color:var(--text2);}
+.tab-btn.active{color:var(--cyan);}
+.tab-btn.active::after{transform:scaleX(1);}
+
+.tab-content{display:none;padding:28px 32px;max-width:980px;margin:0 auto;position:relative;z-index:5;animation:fadeUp .4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.dash-bottom{grid-column:1/-1;}
+@media(max-width:640px){.dash-grid{grid-template-columns:1fr;}.dash-bottom{grid-column:1;}}
+
+.card{background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:24px;backdrop-filter:blur(8px);transition:border-color .2s;}
+.card:hover{border-color:rgba(0,229,255,0.15);}
+.card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);margin-bottom:20px;}
+
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.ring-svg-wrap{position:relative;width:160px;height:160px;}
+.ring-svg-wrap svg{width:100%;height:100%;transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:var(--navy4);stroke-width:14;}
+.ring-fill{fill:none;stroke:url(#ringGrad);stroke-width:14;stroke-linecap:round;stroke-dasharray:440;stroke-dashoffset:440;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);}
+.ring-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;line-height:1.2;}
+.ring-used{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--text1);}
+.ring-goal-lbl{font-size:11px;color:var(--text3);margin-top:2px;}
+.ring-pct{font-size:11px;color:var(--cyan);font-weight:600;margin-top:2px;}
+
+.goal-edit-row{display:flex;align-items:center;gap:10px;margin-top:8px;}
+.goal-edit-row input{width:90px;padding:8px 12px;background:var(--glass2);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-size:14px;font-family:'DM Sans',sans-serif;text-align:center;outline:none;transition:border-color .2s;}
+.goal-edit-row input:focus{border-color:var(--cyan);}
+.goal-edit-row span{font-size:13px;color:var(--text2);}
+.goal-set-btn{padding:8px 16px;background:var(--glass3);border:1px solid var(--border2);color:var(--cyan);border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;transition:background .2s;}
+.goal-set-btn:hover{background:rgba(0,229,255,0.14);}
+
+.reset-btn{padding:9px 20px;background:none;border:1px solid var(--text3);color:var(--text3);border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;transition:all .18s;margin-top:12px;}
+.reset-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+.bottle-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.bottle-canvas-wrap{position:relative;width:100px;height:220px;}
+#bottleCanvas{display:block;will-change:transform;}
+.tilt-badge{padding:4px 12px;background:var(--glass2);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text2);}
+.remain-big{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--cyan);text-shadow:0 0 20px rgba(0,229,255,0.35);}
+.remain-lbl{font-size:12px;color:var(--text2);margin-top:2px;}
+.tilt-slider-row{width:100%;margin-top:8px;}
+.tilt-slider-row label{font-size:12px;color:var(--text3);display:block;margin-bottom:4px;}
+input[type=range]{width:100%;accent-color:var(--cyan);cursor:pointer;}
+
+/* 5 columns in the stats row to accommodate the new battery stat */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:0;}
+@media(max-width:600px){.stats-row{grid-template-columns:repeat(3,1fr);}}
+.stat-box{padding:14px 10px;background:var(--glass);border:1px solid var(--border);border-radius:12px;text-align:center;}
+.stat-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--cyan);}
+.stat-lbl{font-size:10px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;}
+.ring-used,.ring-pct,.remain-big,.stat-val{transition:all .2s ease;}
+
+/* Battery bar in stats box */
+.bat-bar-wrap{margin-top:6px;height:4px;background:var(--navy3);border-radius:2px;overflow:hidden;}
+.bat-bar-fill{height:100%;border-radius:2px;transition:width .6s ease,background .4s;}
+
+.reminder-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+.rem-input-wrap{display:flex;flex-direction:column;gap:4px;}
+.rem-input-wrap label{font-size:11px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;}
+.rem-input-wrap input,.rem-input-wrap select{padding:10px 12px;background:var(--glass2);border:1px solid var(--border);border-radius:10px;color:var(--text1);font-size:15px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;-webkit-appearance:none;}
+.rem-input-wrap input:focus,.rem-input-wrap select:focus{border-color:var(--cyan);}
+.rem-input-wrap select option{background:var(--navy3);color:var(--text1);}
+.rem-btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+.rem-start{flex:1;padding:12px;background:linear-gradient(135deg,var(--cyan3),var(--cyan));border:none;color:#000;border-radius:10px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .2s;}
+.rem-start:hover{opacity:.85;}
+.rem-stop{padding:12px 18px;background:none;border:1px solid var(--danger);color:var(--danger);border-radius:10px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .2s;}
+.rem-stop:hover{background:rgba(255,82,82,0.1);}
+.timer-status{margin-top:12px;padding:12px 16px;background:var(--glass3);border:1px solid var(--border2);border-radius:10px;font-size:14px;color:var(--cyan);display:none;}
+.timer-countdown{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;}
+.rem-split{margin-top:16px;padding-top:14px;border-top:1px solid var(--border);}
+.rem-split-title{font-size:11px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;}
+
+.buzz-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);flex-direction:column;align-items:center;justify-content:center;gap:24px;animation:fadeIn .3s;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.buzz-icon{font-size:72px;animation:shake 0.4s infinite alternate;}
+@keyframes shake{from{transform:rotate(-8deg) scale(1.05)}to{transform:rotate(8deg) scale(1.1)}}
+.buzz-title{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--cyan);text-align:center;}
+.buzz-sub{font-size:16px;color:var(--text2);text-align:center;}
+.buzz-stop-btn{padding:16px 48px;background:var(--cyan);color:#000;border:none;border-radius:50px;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .2s;}
+.buzz-stop-btn:hover{opacity:.8;}
+
+.insight-header{margin-bottom:24px;}
+.insight-header h2{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;}
+.insight-header p{font-size:13px;color:var(--text2);margin-top:4px;}
+.chart-tabs{display:flex;gap:8px;margin-bottom:16px;}
+.chart-tab{padding:6px 16px;background:var(--glass2);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text3);cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif;}
+.chart-tab.active{background:var(--glass3);border-color:var(--border2);color:var(--cyan);}
+.chart-wrap{display:flex;align-items:flex-end;gap:6px;height:180px;padding:0 4px;margin-bottom:20px;overflow-x:auto;}
+.bar-col{flex:1;min-width:24px;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;}
+.bar-body{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height .8s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;}
+.bar-body::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0.15) 0%,transparent 60%);}
+.bar-val{font-size:10px;color:var(--text2);font-weight:600;white-space:nowrap;}
+.bar-day{font-size:10px;color:var(--text3);letter-spacing:.3px;text-transform:uppercase;}
+.insight-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;}
+.istat{padding:16px;background:var(--glass);border:1px solid var(--border);border-radius:12px;text-align:center;}
+.istat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--cyan);}
+.istat-lbl{font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.5px;}
+
+.score-card{background:linear-gradient(135deg,var(--navy4),rgba(0,150,200,0.2));border:1px solid var(--border2);border-radius:var(--r);padding:24px;margin-bottom:20px;display:flex;align-items:center;gap:24px;}
+.score-ring{position:relative;width:100px;height:100px;flex-shrink:0;}
+.score-ring svg{width:100%;height:100%;transform:rotate(-90deg);}
+.score-ring-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.score-num{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--cyan);}
+.score-lbl{font-size:10px;color:var(--text3);}
+.score-info h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;}
+.score-info p{font-size:13px;color:var(--text2);line-height:1.6;}
+
+.streak-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px;}
+.streak-dot{width:14px;height:14px;border-radius:4px;background:var(--navy3);border:1px solid var(--border);transition:background .3s;}
+.streak-dot.on{background:var(--cyan);border-color:transparent;box-shadow:0 0 6px rgba(0,229,255,0.5);}
+.streak-dot.partial{background:#006a7a;border-color:transparent;}
+
+.sug-hero{background:linear-gradient(135deg,var(--navy4) 0%,rgba(0,150,180,0.2) 100%);border:1px solid var(--border2);border-radius:var(--r);padding:28px;margin-bottom:20px;position:relative;overflow:hidden;}
+.sug-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(0,229,255,0.15),transparent 70%);pointer-events:none;}
+.sug-hero h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;}
+.sug-hero p{font-size:13px;color:var(--text2);margin-bottom:20px;}
+.sug-table{width:100%;border-collapse:collapse;}
+.sug-table th,.sug-table td{padding:12px 16px;text-align:left;font-size:14px;}
+.sug-table th{color:var(--text3);font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.sug-table tr:not(:last-child) td{border-bottom:1px solid var(--border);}
+.sug-table td:last-child{color:var(--cyan);font-weight:600;}
+.temp-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+
+.smart-sug-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.sug-item{display:flex;align-items:flex-start;gap:14px;padding:16px;background:var(--glass);border:1px solid var(--border);border-radius:12px;transition:border-color .2s;}
+.sug-item:hover{border-color:var(--border2);}
+.sug-item.alert{border-color:rgba(255,82,82,0.3);background:rgba(255,82,82,0.05);}
+.sug-item.warn{border-color:rgba(255,215,64,0.3);background:rgba(255,215,64,0.05);}
+.sug-item.good{border-color:rgba(0,230,118,0.3);background:rgba(0,230,118,0.05);}
+.sug-icon{font-size:24px;flex-shrink:0;}
+.sug-text h4{font-size:14px;font-weight:600;margin-bottom:3px;}
+.sug-text p{font-size:12px;color:var(--text2);line-height:1.5;}
+
+.ai-panel{background:linear-gradient(135deg,rgba(63,81,181,0.3),rgba(0,150,200,0.2));border:1px solid rgba(100,120,255,0.2);border-radius:var(--r);padding:24px;margin-bottom:20px;}
+.ai-panel h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:4px;}
+.ai-panel p{font-size:13px;color:var(--text2);margin-bottom:16px;}
+.routine-list{display:flex;flex-direction:column;gap:8px;}
+.routine-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--glass2);border-radius:10px;}
+.routine-time{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--cyan);width:60px;flex-shrink:0;}
+.routine-desc{font-size:13px;color:var(--text2);}
+.routine-ml{margin-left:auto;font-size:12px;color:var(--text3);}
+.gen-btn{padding:12px 24px;background:linear-gradient(135deg,rgba(63,81,181,0.6),rgba(0,150,200,0.6));border:1px solid rgba(100,120,255,0.3);color:var(--text1);border-radius:10px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .2s;margin-bottom:16px;}
+.gen-btn:hover{opacity:.8;}
+.gen-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy4);border:1px solid var(--border2);padding:12px 24px;border-radius:30px;font-size:14px;color:var(--cyan);font-weight:500;transition:transform .3s,opacity .3s;opacity:0;z-index:500;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+.perf-row{display:flex;align-items:center;gap:16px;padding:16px;background:var(--glass);border:1px solid var(--border);border-radius:12px;margin-top:20px;}
+.perf-stars{font-size:22px;letter-spacing:2px;}
+.perf-text{flex:1;}
+.perf-text h4{font-size:15px;font-weight:600;}
+.perf-text p{font-size:12px;color:var(--text2);margin-top:2px;}
+.perf-badge{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="buzz-overlay" id="buzzOverlay">
+  <div class="buzz-icon">💧</div>
+  <div class="buzz-title">Time to Hydrate!</div>
+  <div class="buzz-sub">Your reminder has gone off. Take a sip now.</div>
+  <button class="buzz-stop-btn" onclick="stopBuzzer()">Dismiss</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="header">
+  <div class="header-logo">AAPRON</div>
+  <div class="header-info">
+    <div class="pill"><span class="dot"></span><span id="clock">--:--</span></div>
+    <div class="pill-temp" id="tempPill">--°C</div>
+    <!-- ======== NEW: Battery Pill ======== -->
+    <div class="pill-battery" id="battPill">
+      <span class="bat-icon">
+        <span class="bat-body"><span class="bat-fill" id="batFillBar" style="width:0%"></span></span>
+        <span class="bat-nub"></span>
+      </span>
+      <span id="batPctText">--%</span>
+    </div>
+    <!-- ======== END NEW ======== -->
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="openTab(event,'tab1')">Dashboard</button>
+  <button class="tab-btn" onclick="openTab(event,'tab2')">Insights</button>
+  <button class="tab-btn" onclick="openTab(event,'tab3')">Suggestions</button>
+</div>
+
+<!-- TAB 1: DASHBOARD -->
+<div id="tab1" class="tab-content" style="display:block;">
+  <div class="dash-grid">
+
+    <div class="card">
+      <div class="card-title">Daily Water Goal</div>
+      <div class="ring-wrap">
+        <div class="ring-svg-wrap">
+          <svg viewBox="0 0 160 160">
+            <defs>
+              <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00bcd4"/>
+                <stop offset="100%" stop-color="#00e5ff"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-bg" cx="80" cy="80" r="70"/>
+            <circle class="ring-fill" id="goalFill" cx="80" cy="80" r="70"/>
+          </svg>
+          <div class="ring-text">
+            <div class="ring-used" id="usedDisplay">0</div>
+            <div class="ring-goal-lbl">/ <span id="goalDisplay">2000</span> ml</div>
+            <div class="ring-pct" id="pctDisplay">0%</div>
+          </div>
+        </div>
+        <div class="goal-edit-row">
+          <input type="number" id="goalInput" value="2000" min="500" max="8000" step="100"/>
+          <span>ml / day</span>
+          <button class="goal-set-btn" onclick="setGoal()">Set</button>
+        </div>
+        <div style="margin-top:16px;padding:12px 16px;background:var(--glass3);border:1px solid var(--border2);border-radius:10px;text-align:center;">
+          <div style="font-size:13px;color:var(--cyan);">💧 Auto-tracking via load cell</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px;">Tilt bottle to drink — ESP32 measures and updates automatically</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Bottle Level</div>
+      <div class="bottle-wrap">
+        <div class="remain-big" id="remainDisplay">-- ml</div>
+        <div class="remain-lbl">remaining in bottle</div>
+        <div class="bottle-canvas-wrap">
+          <canvas id="bottleCanvas" width="100" height="220"></canvas>
+        </div>
+        <div class="tilt-badge">Tilt: <span id="tiltDisplay">0°</span></div>
+        <div class="tilt-slider-row">
+          <label>Simulate tilt (demo)</label>
+          <input type="range" min="-45" max="45" value="0" id="tiltSlider" oninput="onTiltSlider(this.value)">
+        </div>
+      </div>
+    </div>
+
+    <div class="card dash-bottom" style="padding:16px 24px;">
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-val" id="statStreak">0🔥</div>
+          <div class="stat-lbl">Day Streak</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statRefills">0</div>
+          <div class="stat-lbl">Refills Today</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statLastDrink">--</div>
+          <div class="stat-lbl">Last Drink</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statScore">--</div>
+          <div class="stat-lbl">Hydration Score</div>
+        </div>
+        <!-- ======== NEW: Battery stat box ======== -->
+        <div class="stat-box">
+          <div class="stat-val" id="statBattery">--%</div>
+          <div class="bat-bar-wrap">
+            <div class="bat-bar-fill" id="statBatBar" style="width:0%;background:var(--success);"></div>
+          </div>
+          <div class="stat-lbl">Battery</div>
+        </div>
+        <!-- ======== END NEW ======== -->
+      </div>
+    </div>
+
+    <div class="card dash-bottom">
+      <div class="card-title">Hydration Reminder</div>
+      <div class="reminder-grid">
+        <div class="rem-input-wrap">
+          <label>Every</label>
+          <input type="number" id="timerVal" value="30" min="1" max="999"/>
+        </div>
+        <div class="rem-input-wrap">
+          <label>Unit</label>
+          <select id="timerUnit">
+            <option value="sec">Seconds</option>
+            <option value="min" selected>Minutes</option>
+            <option value="hr">Hours</option>
+          </select>
+        </div>
+        <div class="rem-input-wrap">
+          <label>Repeat</label>
+          <select id="timerRepeat">
+            <option value="once">Once</option>
+            <option value="repeat" selected>Repeat</option>
+          </select>
+        </div>
+      </div>
+      <div class="rem-btn-row">
+        <button class="rem-start" onclick="startTimer()">▶ Start Reminder</button>
+        <button class="rem-stop" onclick="stopBuzzer()">✕ Stop</button>
+      </div>
+      <div class="timer-status" id="timerStatus">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:13px;color:var(--text2);">Next reminder in</span>
+          <div class="timer-countdown" id="timerCountdown">--</div>
+        </div>
+        <div style="margin-top:6px;height:3px;background:var(--navy3);border-radius:2px;overflow:hidden;">
+          <div id="timerBar" style="height:100%;background:var(--cyan);width:100%;transition:width 1s linear;border-radius:2px;"></div>
+        </div>
+      </div>
+      <div class="rem-split">
+        <div class="rem-split-title">AI Auto Timer (pattern based)</div>
+        <div class="rem-btn-row">
+          <button class="rem-start" onclick="startAutoTimer()">🤖 Start Auto Timer</button>
+          <button class="rem-stop" onclick="stopAutoTimer()">✕ Stop Auto</button>
+        </div>
+        <div class="timer-status" id="autoTimerStatus">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--text2);">AI reminder in</span>
+            <div class="timer-countdown" id="autoTimerCountdown">--</div>
+          </div>
+          <div style="margin-top:6px;height:3px;background:var(--navy3);border-radius:2px;overflow:hidden;">
+            <div id="autoTimerBar" style="height:100%;background:var(--cyan);width:100%;transition:width 1s linear;border-radius:2px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TAB 2: INSIGHTS -->
+<div id="tab2" class="tab-content">
+  <div class="insight-header">
+    <h2>Hydration Insights</h2>
+    <p>Your real drinking data from the bottle</p>
+  </div>
+
+  <div class="score-card">
+    <div class="score-ring">
+      <svg viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00bcd4"/><stop offset="100%" stop-color="#00e5ff"/>
+          </linearGradient>
+        </defs>
+        <circle fill="none" stroke="var(--navy4)" stroke-width="10" cx="50" cy="50" r="40"/>
+        <circle fill="none" stroke="url(#scoreGrad)" stroke-width="10" stroke-linecap="round"
+          cx="50" cy="50" r="40"
+          stroke-dasharray="251.2"
+          stroke-dashoffset="251.2"
+          id="scoreCircle"
+          style="transition:stroke-dashoffset 1.2s ease;"/>
+      </svg>
+      <div class="score-ring-text">
+        <div class="score-num" id="scoreNum">--</div>
+        <div class="score-lbl">/100</div>
+      </div>
+    </div>
+    <div class="score-info">
+      <h3 id="scoreTitle">Calculating...</h3>
+      <p id="scoreDesc">Waiting for device data to compute your hydration score.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div class="card-title" style="margin-bottom:0;">Consumption History</div>
+      <div class="chart-tabs">
+        <button class="chart-tab active" onclick="switchChart('weekly',this)">Weekly</button>
+        <button class="chart-tab" onclick="switchChart('monthly',this)">Monthly</button>
+        <button class="chart-tab" onclick="switchChart('hourly',this)">Today (Hourly)</button>
+      </div>
+    </div>
+    <div class="chart-wrap" id="chartWrap"></div>
+    <div class="insight-stats">
+      <div class="istat"><div class="istat-val" id="avgStat">--</div><div class="istat-lbl">Avg daily (ml)</div></div>
+      <div class="istat"><div class="istat-val" id="goalMetStat">--</div><div class="istat-lbl">Goal met</div></div>
+      <div class="istat"><div class="istat-val" id="consistencyStat">--%</div><div class="istat-lbl">Consistency</div></div>
+    </div>
+    <div class="perf-row" id="perfRow">
+      <div class="perf-stars" id="perfStars">⭐⭐⭐⭐⭐</div>
+      <div class="perf-text">
+        <h4 id="perfTitle">Weekly Rating</h4>
+        <p id="perfDesc">Loading your performance...</p>
+      </div>
+      <div class="perf-badge" id="perfBadge">--</div>
+    </div>
+    <div style="margin-top:20px;">
+      <div style="font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Last 7 days</div>
+      <div class="streak-row" id="streakDots"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3: SUGGESTIONS -->
+<div id="tab3" class="tab-content">
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">Smart Suggestions</div>
+    <div class="smart-sug-list" id="smartSugList">
+      <div class="sug-item">
+        <div class="sug-icon">⏳</div>
+        <div class="sug-text"><h4>Loading suggestions...</h4><p>Fetching your hydration data from the bottle.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-panel">
+    <h3>✨ AI Daily Routine</h3>
+    <p>Personalised hydration schedule based on your drinking patterns and daily goal.</p>
+    <button class="gen-btn" onclick="generateRoutine()" id="genBtn">Generate My Routine</button>
+    <div class="routine-list" id="routineList"></div>
+  </div>
+
+  <div class="sug-hero">
+    <h2>Temperature Guide</h2>
+    <p>Recommended daily intake based on ambient temperature</p>
+    <table class="sug-table">
+      <tr><th>Temperature</th><th>Recommended Intake</th></tr>
+      <tr><td><span class="temp-badge" style="background:rgba(100,180,255,0.15);color:#64b4ff;">Below 10°C</span></td><td>1.5 – 2 Liters</td></tr>
+      <tr><td><span class="temp-badge" style="background:rgba(100,220,200,0.15);color:#64dcc8;">10 – 15°C</span></td><td>2 Liters</td></tr>
+      <tr><td><span class="temp-badge" style="background:rgba(0,229,255,0.15);color:var(--cyan);">16 – 20°C</span></td><td>2.5 Liters</td></tr>
+      <tr><td><span class="temp-badge" style="background:rgba(255,215,64,0.15);color:#ffd740;">21 – 25°C</span></td><td>3 Liters</td></tr>
+      <tr><td><span class="temp-badge" style="background:rgba(255,160,64,0.15);color:#ffa040;">26 – 30°C</span></td><td>3.5 Liters</td></tr>
+      <tr><td><span class="temp-badge" style="background:rgba(255,82,82,0.15);color:#ff5252;">Above 30°C</span></td><td>4 – 5 Liters</td></tr>
+    </table>
+  </div>
+</div>
+
+<script>
+// ===================== STATE =====================
+let usedMl = 0, goalMl = 2000, bottleRemain = 750, tiltAngle = 0;
+let streakDays = 0, refillCount = 0, lifetimeMl = 0, avgDailyMl = 0;
+let minsSinceDrink = 9999;
+let weeklyData = [], monthlyData = [], hourlyData = [];
+let timerInterval = null, timerTotal = 0, timerLeft = 0, timerRepeatMode = false;
+let autoTimerInterval = null, autoTimerTotal = 0, autoTimerLeft = 0;
+let generatedRoutine = [];
+let activeChart = 'weekly';
+let ambientTemp = null;
+let goalInputInitialised = false;
+let pollInFlight = false;
+let displayUsedMl = 0, displayBottleRemain = 750, displayTilt = 0;
+// ======== NEW ========
+let batteryPct  = 0;
+let batteryVolt = 0;
+// =====================
+
+// ===================== TABS =====================
+function openTab(e, id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).style.display = 'block';
+  e.currentTarget.classList.add('active');
+  if (id === 'tab2') { renderChart(); updateScore(); updatePerformance(); updateStreakDots(); }
+  if (id === 'tab3') { updateSmartSuggestions(); }
+}
+
+// ===================== CLOCK =====================
+function updateClock() {
+  const n = new Date();
+  document.getElementById('clock').textContent = n.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+function dayOfYear(d) {
+  const start = new Date(d.getFullYear(), 0, 0);
+  return Math.floor((d - start) / 86400000);
+}
+
+function syncBrowserTime() {
+  const now = new Date();
+  const dayKey = now.getFullYear() * 1000 + dayOfYear(now);
+  const hour = now.getHours();
+  fetch('/syncTime?day=' + dayKey + '&hour=' + hour).catch(() => {});
+}
+setInterval(syncBrowserTime, 30000);
+syncBrowserTime();
+
+// ===================== TOAST =====================
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===================== GOAL =====================
+function setGoal() {
+  const v = parseInt(document.getElementById('goalInput').value) || 2000;
+  if (v < 500 || v > 8000) { toast('Goal must be 500-8000 ml'); return; }
+  goalMl = v;
+  document.getElementById('goalDisplay').textContent = goalMl;
+  fetch('/setGoal?val=' + goalMl);
+  updateRing(); toast('Goal set to ' + goalMl + ' ml');
+}
+
+function resetWater() {
+  fetch('/resetDay')
+    .then(() => toast('Reset for today — refreshing...'))
+    .catch(() => toast('Could not reach bottle'));
+}
+
+// ===================== RING =====================
+function updateRing(used = usedMl, goal = goalMl) {
+  const circ = 2 * Math.PI * 70;
+  const pct = Math.min(used / Math.max(goal, 1), 1);
+  document.getElementById('goalFill').style.strokeDasharray = circ;
+  document.getElementById('goalFill').style.strokeDashoffset = circ * (1 - pct);
+  document.getElementById('usedDisplay').textContent = Math.round(used);
+  document.getElementById('goalDisplay').textContent = goal;
+  document.getElementById('pctDisplay').textContent = Math.round(pct * 100) + '%';
+}
+document.getElementById('goalFill').style.strokeDasharray = 2 * Math.PI * 70;
+document.getElementById('goalFill').style.strokeDashoffset = 2 * Math.PI * 70;
+
+// ===================== BOTTLE =====================
+const bCanvas = document.getElementById('bottleCanvas');
+const bCtx = bCanvas.getContext('2d');
+function drawBottle(levelMl, angleDeg) {
+  const W = bCanvas.width, H = bCanvas.height;
+  bCtx.clearRect(0, 0, W, H);
+  const maxMl = 750, level = Math.min(Math.max(levelMl, 0), maxMl) / maxMl;
+  const bw = 40, bh = 160, bx = -bw/2, by = -bh/2;
+  const neckW = 18, neckH = 28;
+  const angleRad = angleDeg * (Math.PI / 180) * 0.6;
+  bCtx.save();
+  bCtx.translate(W/2, H/2+10);
+  bCtx.rotate(angleRad);
+  bCtx.save();
+  bCtx.beginPath();
+  bCtx.roundRect(bx, by, bw, bh, 4);
+  bCtx.clip();
+  bCtx.rotate(-angleRad);
+  const waterH = bh * level, waterY = by + bh - waterH;
+  bCtx.fillStyle = 'rgba(0,180,220,0.85)';
+  bCtx.fillRect(-W, waterY, W*2, bh+10);
+  bCtx.fillStyle = 'rgba(255,255,255,0.12)';
+  bCtx.fillRect(-W, waterY, W*2, 6);
+  bCtx.rotate(angleRad);
+  bCtx.restore();
+  bCtx.beginPath(); bCtx.roundRect(bx, by, bw, bh, 4);
+  bCtx.strokeStyle = 'rgba(0,229,255,0.5)'; bCtx.lineWidth = 2; bCtx.stroke();
+  bCtx.beginPath(); bCtx.roundRect(-neckW/2, by-neckH, neckW, neckH+4, 3);
+  bCtx.strokeStyle = 'rgba(0,229,255,0.4)'; bCtx.stroke();
+  bCtx.beginPath(); bCtx.roundRect(-neckW/2-2, by-neckH-12, neckW+4, 14, 3);
+  bCtx.fillStyle = 'rgba(0,150,180,0.6)'; bCtx.fill();
+  bCtx.strokeStyle = 'rgba(0,229,255,0.3)'; bCtx.stroke();
+  bCtx.setLineDash([3,4]); bCtx.strokeStyle = 'rgba(0,229,255,0.15)'; bCtx.lineWidth = 1;
+  for (let i=1;i<4;i++){const ly=by+(bh/4)*i;bCtx.beginPath();bCtx.moveTo(bx+4,ly);bCtx.lineTo(bx+bw-4,ly);bCtx.stroke();}
+  bCtx.setLineDash([]);
+  bCtx.restore();
+}
+function updateBottle(remain = bottleRemain, angle = tiltAngle) {
+  document.getElementById('remainDisplay').textContent = Math.round(remain) + ' ml';
+  drawBottle(remain, angle);
+}
+function onTiltSlider(v) {
+  tiltAngle = parseFloat(v);
+  document.getElementById('tiltDisplay').textContent = tiltAngle.toFixed(0) + '°';
+  drawBottle(bottleRemain, tiltAngle);
+}
+drawBottle(750, 0);
+
+function smoothStep(curr, target, factor) {
+  return curr + (target - curr) * factor;
+}
+function animateDashboard() {
+  displayUsedMl = smoothStep(displayUsedMl, usedMl, 0.18);
+  displayBottleRemain = smoothStep(displayBottleRemain, bottleRemain, 0.18);
+  displayTilt = smoothStep(displayTilt, tiltAngle, 0.2);
+  if (Math.abs(displayUsedMl - usedMl) < 0.2) displayUsedMl = usedMl;
+  if (Math.abs(displayBottleRemain - bottleRemain) < 0.2) displayBottleRemain = bottleRemain;
+  if (Math.abs(displayTilt - tiltAngle) < 0.1) displayTilt = tiltAngle;
+  updateRing(displayUsedMl, goalMl);
+  updateBottle(displayBottleRemain, displayTilt);
+  requestAnimationFrame(animateDashboard);
+}
+requestAnimationFrame(animateDashboard);
+
+// ===================== BATTERY DISPLAY =====================
+// ======== NEW ========
+function updateBatteryDisplay(pct, volt) {
+  // --- Header pill ---
+  const fillBar  = document.getElementById('batFillBar');
+  const pctText  = document.getElementById('batPctText');
+  const pill     = document.getElementById('battPill');
+
+  if (fillBar) fillBar.style.width = Math.min(pct, 100) + '%';
+  if (pctText) pctText.textContent = pct + '%';
+
+  // Colour coding: green > 30%, yellow 15–30%, red < 15%
+  let col, borderCol, bgCol;
+  if (pct < 15) {
+    col = 'var(--danger)';
+    borderCol = 'rgba(255,82,82,0.35)';
+    bgCol = 'rgba(255,82,82,0.08)';
+  } else if (pct < 30) {
+    col = 'var(--warn)';
+    borderCol = 'rgba(255,215,64,0.35)';
+    bgCol = 'rgba(255,215,64,0.06)';
+  } else {
+    col = 'var(--success)';
+    borderCol = 'rgba(0,230,118,0.25)';
+    bgCol = 'var(--glass)';
+  }
+  if (pill) {
+    pill.style.color       = col;
+    pill.style.borderColor = borderCol;
+    pill.style.background  = bgCol;
+  }
+
+  // --- Dashboard stat box ---
+  const statEl  = document.getElementById('statBattery');
+  const barEl   = document.getElementById('statBatBar');
+  if (statEl) {
+    statEl.textContent = pct + '%';
+    statEl.style.color = col;
+  }
+  if (barEl) {
+    barEl.style.width      = Math.min(pct, 100) + '%';
+    barEl.style.background = col;
+  }
+
+  // --- Low battery toast (show once when it first drops below threshold) ---
+  if (pct < 15 && pct > 0) {
+    const key = 'batWarnShown_' + Math.floor(pct / 5);
+    if (!sessionStorage.getItem(key)) {
+      toast('⚠️ Low battery: ' + pct + '% — please charge soon');
+      sessionStorage.setItem(key, '1');
+    }
+  }
+}
+// ======== END NEW ========
+
+// ===================== DASH STATS =====================
+function updateDashStats() {
+  document.getElementById('statStreak').textContent = streakDays + '🔥';
+  document.getElementById('statRefills').textContent = refillCount;
+  if (minsSinceDrink >= 9999) document.getElementById('statLastDrink').textContent = '--';
+  else if (minsSinceDrink < 60) document.getElementById('statLastDrink').textContent = minsSinceDrink + 'm';
+  else document.getElementById('statLastDrink').textContent = Math.floor(minsSinceDrink/60) + 'h';
+  const score = computeHydrationScore();
+  document.getElementById('statScore').textContent = score;
+}
+
+// ===================== HYDRATION SCORE =====================
+function computeHydrationScore() {
+  if (goalMl === 0) return 0;
+  let score = 0;
+  score += Math.min((usedMl / goalMl) * 50, 50);
+  score += Math.min(streakDays * 4, 20);
+  if (minsSinceDrink < 60) score += 15;
+  else if (minsSinceDrink < 90) score += 10;
+  else if (minsSinceDrink < 120) score += 5;
+  if (refillCount >= 1) score += 8;
+  if (usedMl > goalMl * 0.3 && new Date().getHours() < 12) score += 7;
+  return Math.round(Math.min(score, 100));
+}
+
+function updateScore() {
+  const score = computeHydrationScore();
+  document.getElementById('scoreNum').textContent = score;
+  const circ = 251.2;
+  document.getElementById('scoreCircle').style.strokeDashoffset = circ * (1 - score/100);
+  let title, desc;
+  if (score >= 85) { title = '🏆 Excellent Hydration!'; desc = 'You\'re crushing your hydration goals. Keep this up!'; }
+  else if (score >= 70) { title = '💧 Good Hydration'; desc = 'You\'re doing well! A few more sips and you\'ll be at excellent.'; }
+  else if (score >= 50) { title = '⚠️ Moderate — Drink More'; desc = 'You\'re halfway there. Remember to drink every hour.'; }
+  else if (score >= 30) { title = '🔴 Low Hydration'; desc = 'You need to drink significantly more today. Start with 200ml now.'; }
+  else { title = '🚨 Very Low!'; desc = 'Critical dehydration warning. Please drink water immediately.'; }
+  document.getElementById('scoreTitle').textContent = title;
+  document.getElementById('scoreDesc').textContent = desc;
+}
+
+// ===================== CHART =====================
+function switchChart(type, btn) {
+  activeChart = type;
+  document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderChart();
+}
+
+function renderChart() {
+  const wrap = document.getElementById('chartWrap');
+  wrap.innerHTML = '';
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const colors = ['#42a5f5','#ab47bc','#00e5ff','#ffa726','#ef5350','#66bb6a','#26c6da'];
+
+  if (activeChart === 'weekly') {
+    const data = weeklyData.length === 7 ? weeklyData : Array(7).fill(0);
+    const maxV = Math.max(...data, 1);
+    data.forEach((ml, i) => {
+      const pct = (ml / Math.max(maxV, 2500)) * 100;
+      wrap.innerHTML += `<div class="bar-col">
+        <div class="bar-val">${ml > 0 ? (ml/1000).toFixed(1)+'L' : ''}</div>
+        <div class="bar-body" style="height:${Math.max(pct,2)}%;background:${colors[i]};"></div>
+        <div class="bar-day">${days[i]}</div></div>`;
+    });
+    const avg = data.reduce((a,b)=>a+b,0) / (data.filter(v=>v>0).length || 1);
+    const met = data.filter(v=>v >= goalMl).length;
+    const cons = Math.round((data.filter(v=>v>0).length / 7) * 100);
+    document.getElementById('avgStat').textContent = Math.round(avg);
+    document.getElementById('goalMetStat').textContent = met + '/7';
+    document.getElementById('consistencyStat').textContent = cons + '%';
+
+  } else if (activeChart === 'monthly') {
+    const data = monthlyData.length === 30 ? monthlyData : Array(30).fill(0);
+    const maxV = Math.max(...data, 1);
+    data.forEach((ml, i) => {
+      const pct = (ml / Math.max(maxV, 2500)) * 100;
+      const col = ml >= goalMl ? '#00e5ff' : ml > goalMl*0.7 ? '#ffa726' : '#ef5350';
+      wrap.innerHTML += `<div class="bar-col">
+        <div class="bar-val"></div>
+        <div class="bar-body" style="height:${Math.max(pct,2)}%;background:${col};"></div>
+        <div class="bar-day">${30-i}</div></div>`;
+    });
+    const met = data.filter(v=>v >= goalMl).length;
+    const avg = data.reduce((a,b)=>a+b,0) / (data.filter(v=>v>0).length || 1);
+    document.getElementById('avgStat').textContent = Math.round(avg);
+    document.getElementById('goalMetStat').textContent = met + '/30';
+    document.getElementById('consistencyStat').textContent = Math.round((data.filter(v=>v>0).length/30)*100) + '%';
+
+  } else {
+    const data = hourlyData.length === 24 ? hourlyData : Array(24).fill(0);
+    const maxV = Math.max(...data, 1);
+    const now = new Date().getHours();
+    data.forEach((ml, i) => {
+      const pct = (ml / Math.max(maxV, 300)) * 100;
+      const isCurrent = i === now;
+      wrap.innerHTML += `<div class="bar-col">
+        <div class="bar-val">${ml > 0 ? Math.round(ml) : ''}</div>
+        <div class="bar-body ${isCurrent?'current':''}" style="height:${Math.max(pct,2)}%;background:${isCurrent?'#00e5ff':'#00bcd4'};opacity:${isCurrent?1:0.5+0.5*(i/24)};"></div>
+        <div class="bar-day">${i%6===0?i+'h':''}</div></div>`;
+    });
+    const total = data.reduce((a,b)=>a+b,0);
+    const peak = data.indexOf(Math.max(...data));
+    document.getElementById('avgStat').textContent = Math.round(total);
+    document.getElementById('goalMetStat').textContent = peak + ':00';
+    document.getElementById('consistencyStat').textContent = data.filter(v=>v>0).length + 'h';
+  }
+}
+
+// ===================== PERFORMANCE RATING =====================
+function updatePerformance() {
+  const data = weeklyData.length === 7 ? weeklyData : Array(7).fill(0);
+  const met = data.filter(v => v >= goalMl).length;
+  const pct = (met / 7) * 100;
+  let stars, title, desc, color;
+  if (pct >= 86) { stars='⭐⭐⭐⭐⭐'; title='Outstanding Week!'; desc='7 days, nailed it. You\'re a hydration champion.'; color='#00e5ff'; }
+  else if (pct >= 71) { stars='⭐⭐⭐⭐'; title='Great Week'; desc='5-6 days of meeting your goal. Near perfect!'; color='#00e676'; }
+  else if (pct >= 57) { stars='⭐⭐⭐'; title='Good Week'; desc='4 days of goal met. Solid but room to improve.'; color='#ffd740'; }
+  else if (pct >= 43) { stars='⭐⭐'; title='Average Week'; desc='3 days. Try setting reminders more aggressively.'; color='#ffa726'; }
+  else { stars='⭐'; title='Needs Work'; desc='Less than 3 days of goal met. Let\'s do better!'; color='#ff5252'; }
+  document.getElementById('perfStars').textContent = stars;
+  document.getElementById('perfTitle').textContent = title;
+  document.getElementById('perfDesc').textContent = desc;
+  const badge = document.getElementById('perfBadge');
+  badge.textContent = met + '/7 days';
+  badge.style.background = color + '22';
+  badge.style.color = color;
+  badge.style.border = '1px solid ' + color + '44';
+}
+
+// ===================== STREAK DOTS =====================
+function updateStreakDots() {
+  const wrap = document.getElementById('streakDots');
+  wrap.innerHTML = '';
+  const data = weeklyData.length === 7 ? weeklyData : Array(7).fill(0);
+  data.forEach(v => {
+    const d = document.createElement('div');
+    const cls = v >= goalMl ? 'on' : v >= goalMl * 0.5 ? 'partial' : '';
+    d.className = 'streak-dot ' + cls;
+    wrap.appendChild(d);
+  });
+}
+
+// ===================== SMART SUGGESTIONS =====================
+function updateSmartSuggestions() {
+  const list = document.getElementById('smartSugList');
+  const suggestions = [];
+  const hour = new Date().getHours();
+
+  if (minsSinceDrink > 60) {
+    suggestions.push({
+      cls: 'alert', icon: '⏰',
+      title: 'Drink 200ml Now',
+      desc: `You haven't drunk in ${minsSinceDrink >= 9999 ? 'a long time' : minsSinceDrink + ' minutes'}. Your body needs hydration every hour.`
+    });
+  } else {
+    suggestions.push({
+      cls: 'good', icon: '✅',
+      title: 'Great Timing!',
+      desc: `You drank ${minsSinceDrink} minutes ago. Keep it up — aim for 200ml every hour.`
+    });
+  }
+
+  if (hour >= 12 && hour <= 17) {
+    const afternoonTarget = goalMl * 0.4;
+    const afternoonHours = hourlyData.slice(12, hour+1) || [];
+    const afternoonSoFar = afternoonHours.reduce((a,b) => a+b, 0);
+    if (afternoonSoFar < afternoonTarget * 0.5) {
+      suggestions.push({
+        cls: 'warn', icon: '🌞',
+        title: 'Boost Your Afternoon Intake',
+        desc: `Afternoons are key for hydration. You've had ${Math.round(afternoonSoFar)}ml so far — aim for ${Math.round(afternoonTarget)}ml between 12pm-5pm.`
+      });
+    }
+  }
+
+  const temp = ambientTemp || 28;
+  if (temp > 25) {
+    const extra = temp > 30 ? 1000 : 500;
+    suggestions.push({
+      cls: 'warn', icon: '🌡️',
+      title: `High Temperature (${temp}°C) — Drink More`,
+      desc: `At ${temp}°C, you should drink an extra ${extra}ml today. Your adjusted goal: ${goalMl + extra}ml.`
+    });
+  }
+
+  if (minsSinceDrink >= 120 && minsSinceDrink < 9999) {
+    suggestions.push({
+      cls: 'alert', icon: '🚨',
+      title: 'Long Gap Detected!',
+      desc: `It's been ${Math.floor(minsSinceDrink/60)}h ${minsSinceDrink%60}m since your last drink. Drink at least 300ml now.`
+    });
+  }
+
+  if (hour < 9 && usedMl < 200) {
+    suggestions.push({
+      cls: 'warn', icon: '🌅',
+      title: 'Start Your Day with Water',
+      desc: 'Drink 500ml within the first hour of waking up to kickstart your metabolism and hydration.'
+    });
+  }
+
+  if (hour >= 18 && usedMl < goalMl) {
+    const remaining = goalMl - usedMl;
+    suggestions.push({
+      cls: remaining > 500 ? 'alert' : 'warn', icon: '🌙',
+      title: 'Evening Check-in',
+      desc: `You still need ${Math.round(remaining)}ml to hit your goal. Spread it across the evening — avoid drinking too much right before bed.`
+    });
+  }
+
+  if (usedMl >= goalMl) {
+    suggestions.push({
+      cls: 'good', icon: '🏆',
+      title: 'Daily Goal Achieved!',
+      desc: `Amazing! You've hit ${Math.round(usedMl)}ml today. Streak: ${streakDays} days. Keep going to maintain your momentum.`
+    });
+  }
+
+  // ======== NEW: battery-low suggestion ========
+  if (batteryPct > 0 && batteryPct < 15) {
+    suggestions.push({
+      cls: 'alert', icon: '🔋',
+      title: 'Low Battery — Charge Your Bottle',
+      desc: `Battery is at ${batteryPct}% (${batteryVolt.toFixed(2)} V). Reminder tracking and alerts will stop when the device powers off.`
+    });
+  }
+  // =============================================
+
+  list.innerHTML = suggestions.map(s => `
+    <div class="sug-item ${s.cls}">
+      <div class="sug-icon">${s.icon}</div>
+      <div class="sug-text"><h4>${s.title}</h4><p>${s.desc}</p></div>
+    </div>`).join('');
+}
+
+// ===================== AI ROUTINE GENERATOR =====================
+function generateRoutine() {
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+  const routineList = document.getElementById('routineList');
+
+  const activeHours = [];
+  for (let h = 0; h < 24; h++) if ((hourlyData[h] || 0) > 0) activeHours.push(h);
+
+  let intervalH = 2;
+  if (activeHours.length >= 2) {
+    let gapSum = 0;
+    for (let i = 1; i < activeHours.length; i++) gapSum += (activeHours[i] - activeHours[i - 1]);
+    intervalH = Math.round(gapSum / (activeHours.length - 1));
+    if (intervalH < 1) intervalH = 1;
+    if (intervalH > 3) intervalH = 3;
+  }
+
+  let wakeHour  = activeHours.length ? Math.max(5, activeHours[0] - 1) : 7;
+  let sleepHour = activeHours.length ? Math.min(23, activeHours[activeHours.length - 1] + 2) : 22;
+  if (sleepHour <= wakeHour) sleepHour = wakeHour + 1;
+
+  const slots = [];
+  for (let h = wakeHour; h <= sleepHour; h += intervalH) slots.push(h);
+  if (slots[slots.length - 1] !== sleepHour) slots.push(sleepHour);
+
+  const weights = slots.map(h => (hourlyData[h] || 0) + 1);
+  const weightTotal = weights.reduce((a, b) => a + b, 0) || 1;
+
+  generatedRoutine = slots.map((h, i) => {
+    let ml = Math.round(((weights[i] / weightTotal) * goalMl) / 50) * 50;
+    if (ml < 100) ml = 100;
+    const label = i === 0 ? 'Start hydration' : (i === slots.length - 1 ? 'Evening wrap-up' : 'Routine sip');
+    const time  = h < 12 ? h + ':00 AM' : (h === 12 ? '12:00 PM' : (h - 12) + ':00 PM');
+    return { hour: h, time, desc: label, ml };
+  });
+
+  routineList.innerHTML = generatedRoutine.map(s => `
+    <div class="routine-item">
+      <div class="routine-time">${s.time}</div>
+      <div class="routine-desc">${s.desc}</div>
+      <div class="routine-ml">${s.ml} ml</div>
+    </div>`).join('');
+
+  btn.disabled = false;
+  btn.textContent = '↺ Regenerate';
+}
+
+// ===================== TIMER =====================
+function readTimerSecondsFromUI() {
+  const val  = parseInt(document.getElementById('timerVal').value) || 30;
+  const unit = document.getElementById('timerUnit').value;
+  let seconds = val;
+  if (unit === 'min') seconds = val * 60;
+  if (unit === 'hr')  seconds = val * 3600;
+  return Math.max(seconds, 1);
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  const seconds = readTimerSecondsFromUI();
+  fetch('/setTimer?val=' + seconds);
+  timerRepeatMode = document.getElementById('timerRepeat').value === 'repeat';
+  timerTotal = seconds; timerLeft = timerTotal;
+  document.getElementById('timerStatus').style.display = 'block';
+  updateTimerUI();
+  timerInterval = setInterval(() => {
+    timerLeft--;
+    updateTimerUI();
+    if (timerLeft <= 0) {
+      triggerBuzz();
+      if (timerRepeatMode) timerLeft = timerTotal;
+      else { clearInterval(timerInterval); document.getElementById('timerStatus').style.display = 'none'; }
+    }
+  }, 1000);
+  toast('Reminder set');
+}
+
+function updateTimerUI() {
+  const s = Math.max(timerLeft, 0);
+  let txt = s >= 3600 ? Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m' : s >= 60 ? Math.floor(s/60)+'m '+(s%60)+'s' : s+'s';
+  document.getElementById('timerCountdown').textContent = txt;
+  document.getElementById('timerBar').style.width = Math.max((timerLeft/timerTotal)*100, 0) + '%';
+}
+
+function getSecondsToNextRoutineSlot(schedule) {
+  const now = new Date();
+  const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+  let bestDiff = 24 * 3600;
+  for (let i = 0; i < schedule.length; i++) {
+    const slotSec = (schedule[i].hour || 0) * 3600;
+    let diff = slotSec - nowSec;
+    if (diff <= 0) diff += 24 * 3600;
+    if (diff < bestDiff) bestDiff = diff;
+  }
+  return Math.max(bestDiff, 1);
+}
+
+function startAutoTimer() {
+  clearInterval(autoTimerInterval);
+  if (!generatedRoutine.length) generateRoutine();
+  if (!generatedRoutine.length) { toast('Generate routine first'); return; }
+  autoTimerTotal = getSecondsToNextRoutineSlot(generatedRoutine);
+  autoTimerLeft  = autoTimerTotal;
+  fetch('/setTimer?val=' + autoTimerLeft).catch(() => {});
+  document.getElementById('autoTimerStatus').style.display = 'block';
+  updateAutoTimerUI();
+  autoTimerInterval = setInterval(() => {
+    autoTimerLeft--;
+    updateAutoTimerUI();
+    if (autoTimerLeft <= 0) {
+      triggerBuzz();
+      autoTimerTotal = getSecondsToNextRoutineSlot(generatedRoutine);
+      autoTimerLeft  = autoTimerTotal;
+      fetch('/setTimer?val=' + autoTimerLeft).catch(() => {});
+      updateAutoTimerUI();
+    }
+  }, 1000);
+  toast('AI auto timer started');
+}
+
+function stopAutoTimer() {
+  clearInterval(autoTimerInterval);
+  document.getElementById('autoTimerStatus').style.display = 'none';
+  fetch('/stopBuzzer').catch(()=>{});
+  toast('AI auto timer stopped');
+}
+
+function updateAutoTimerUI() {
+  const s = Math.max(autoTimerLeft, 0);
+  let txt = s >= 3600 ? Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m' : s >= 60 ? Math.floor(s/60)+'m '+(s%60)+'s' : s+'s';
+  document.getElementById('autoTimerCountdown').textContent = txt;
+  document.getElementById('autoTimerBar').style.width = Math.max((autoTimerLeft/autoTimerTotal)*100, 0) + '%';
+}
+
+function triggerBuzz() {
+  document.getElementById('buzzOverlay').style.display = 'flex';
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    function beep(t){const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;g.gain.setValueAtTime(0.3,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.3);o.start(t);o.stop(t+0.3);}
+    beep(ac.currentTime); beep(ac.currentTime+0.4); beep(ac.currentTime+0.8);
+  } catch(e){}
+}
+
+function stopBuzzer() {
+  document.getElementById('buzzOverlay').style.display = 'none';
+  clearInterval(timerInterval);
+  document.getElementById('timerStatus').style.display = 'none';
+  fetch('/stopBuzzer').catch(()=>{});
+  toast('Reminder stopped');
+}
+
+// ===================== DEVICE POLL =====================
+function pollDevice() {
+  if (pollInFlight) return;
+  pollInFlight = true;
+  fetch('/data')
+    .then(r => r.json())
+    .then(data => {
+      tiltAngle      = parseFloat(data.tilt)      || 0;
+      bottleRemain   = data.remain   != null ? parseFloat(data.remain)    : bottleRemain;
+      usedMl         = data.used     != null ? parseFloat(data.used)      : usedMl;
+      goalMl         = data.goal     != null ? parseFloat(data.goal)      : goalMl;
+      streakDays     = data.streak   != null ? parseInt(data.streak)      : streakDays;
+      refillCount    = data.refills  != null ? parseInt(data.refills)     : refillCount;
+      lifetimeMl     = data.lifetime != null ? parseFloat(data.lifetime)  : lifetimeMl;
+      avgDailyMl     = data.avgDaily != null ? parseFloat(data.avgDaily)  : avgDailyMl;
+      minsSinceDrink = data.minsSince != null ? parseInt(data.minsSince)  : minsSinceDrink;
+      weeklyData     = data.weekly   || [];
+      monthlyData    = data.monthly  || [];
+      hourlyData     = data.hourly   || [];
+      // ======== NEW: battery ========
+      batteryPct  = data.battery  != null ? parseInt(data.battery)   : batteryPct;
+      batteryVolt = data.batVolt  != null ? parseFloat(data.batVolt) : batteryVolt;
+      updateBatteryDisplay(batteryPct, batteryVolt);
+      // ==============================
+
+      document.getElementById('goalDisplay').textContent = goalMl;
+      if (!goalInputInitialised) {
+        document.getElementById('goalInput').value = goalMl;
+        goalInputInitialised = true;
+      }
+      document.getElementById('tiltDisplay').textContent = tiltAngle.toFixed(1) + '°';
+      const tiltSlider = document.getElementById('tiltSlider');
+      if (document.activeElement !== tiltSlider) tiltSlider.value = tiltAngle;
+
+      updateDashStats();
+    })
+    .catch(() => {})
+    .then(() => { pollInFlight = false; });
+}
+setInterval(pollDevice, 1500);
+updateRing(); updateBottle();
+</script>
+</body>
+</html>
