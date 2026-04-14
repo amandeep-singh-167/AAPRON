@@ -25,7 +25,9 @@ An ESP32-based smart water bottle that tracks water intake and improves hydratio
 - AI hydration routine
 
 ## 📷 Project Images
-(Add your images here)
+![WhatsApp Image 2026-04-15 at 12 56 54 AM](https://github.com/user-attachments/assets/8559a555-6d10-4ae8-a89f-de2b8183444a)
+![WhatsApp Image 2026-04-15 at 12 56 58 AM](https://github.com/user-attachments/assets/17b4bc7e-e518-4622-9110-66b53da2511e)
+
 
 ## 📌 Future Scope
 - Mobile app
